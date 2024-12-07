@@ -1,0 +1,489 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>SYNTHESIZING SPEECH (PROJECT SECTION 2)</title><meta name="generator" content="MATLAB 9.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2024-12-06"><meta name="DC.source" content="synthesizing_speech_project.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>SYNTHESIZING SPEECH (PROJECT SECTION 2)</h1><!--introduction--><p>Emily Erickson</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load in Audio (see bottom for code to record own)</a></li><li><a href="#2">Comparing Voice Signal Synthesized With Different Numbers of Sinusoids</a></li><li><a href="#3">How Does Synthesizing With Less Sinusoids Affect Music?</a></li><li><a href="#4">Reducing Frame Duration to Reduce Number of Needed Sinusoids</a></li><li><a href="#5">Listening to the Mystery Signal</a></li><li><a href="#6">Helper Functions</a></li><li><a href="#7">Code for Recording an Audio Snippet</a></li></ul></div><h2 id="1">Load in Audio (see bottom for code to record own)</h2><pre class="codeinput">fs = 8000;
+[xx, fs] = audioread(<span class="string">'voice.wav'</span>);
+</pre><h2 id="2">Comparing Voice Signal Synthesized With Different Numbers of Sinusoids</h2><p>8 sinusoids</p><pre class="codeinput">frameDur = 0.01;
+overlap = 0.005;
+numSines = 8;
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+soundsc(yy_synth_8, fs);
+audiowrite(<span class="string">"pipe8.wav"</span>, yy_synth_8,fs)
+pause(length(yy_synth_8)/fs); <span class="comment">% Pause for the duration of the first signal</span>
+
+<span class="comment">% Comparing the spectograms of the original signal with one synthesized with 8 sinusoids</span>
+subplot(2, 1, 1);
+specgram(xx, 256, fs);
+title(<span class="string">'Original Signal'</span>);
+subplot(2,1,2);
+specgram(yy_synth_8, 256, fs);
+title(<span class="string">"Synthesized Signal (8 Freqs)"</span>);
+
+<span class="comment">% They have similar harmonic content in vowel regions, but audible differentices</span>
+<span class="comment">% with fricatives.</span>
+
+<span class="comment">% Lets repeat to see what is sounds like with only the 4 largest frequencies per</span>
+<span class="comment">% frame</span>
+[~, idx] = sort(abs(Camps),2, <span class="string">'descend'</span>); <span class="comment">% Sort by mgnitude</span>
+top4Idx = idx(:, 1:4);
+Camps_4 = zeros(size(Camps, 1), 4);
+Freqs_4 = zeros(size(Freqs, 1), 4);
+<span class="keyword">for</span> k = 1:size(Camps, 1)
+    Camps_4(k, :) = Camps(k, top4Idx(k, :));
+    Freqs_4(k, :) = Freqs(k, top4Idx(k, :));
+<span class="keyword">end</span>
+
+yy_synth_4 = sigSynth(Camps_4, Freqs_4, fs, frameDur, overlap);
+soundsc(yy_synth_4, fs);
+audiowrite(<span class="string">"pipe4.wav"</span>, yy_synth_4,fs)
+pause(length(yy_synth_4)/fs);
+<span class="comment">% The audio quality is definitely worse than the original and 8 sinusoid</span>
+<span class="comment">% versions. Sounds like the speake is underwater!</span>
+
+<span class="comment">% Visualizing 8 vs 4 sinusoid synthesis</span>
+subplot(2,1,1);
+specgram(yy_synth_8, 256, fs);
+title(<span class="string">'Synthesized Signal (8 Freqs)'</span>);
+subplot(2,1,2);
+specgram(yy_synth_4, 256, fs);
+title(<span class="string">'Synthesized Signal (4 Freqs)'</span>);
+</pre><img vspace="5" hspace="5" src="synthesizing_speech_project_01.png" alt=""> <h2 id="3">How Does Synthesizing With Less Sinusoids Affect Music?</h2><pre class="codeinput">[xx, fs] = audioread(<span class="string">'FurElise.wav'</span>);
+soundsc(xx, fs);
+pause(length(xx)/fs);
+
+<span class="comment">% Same params as for speech</span>
+frameDur = 0.01;
+overlap = 0.005;
+numSines = 28;
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+
+<span class="comment">% I just varied the number of sinusoids like above. The fewer I used, the</span>
+<span class="comment">% worse it sounded. I found at least 28 to be necessary for the song to</span>
+<span class="comment">% sound decent.</span>
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+soundsc(yy_synth_8, fs);
+pause(length(yy_synth_8)/fs);
+audiowrite(<span class="string">"elise28.wav"</span>, yy_synth_8,fs)
+
+<span class="comment">% Here is a spectogram comparing the two:</span>
+subplot(2, 1, 1);
+specgram(xx, 256, fs);
+title(<span class="string">'Original Signal'</span>);
+subplot(2,1,2);
+specgram(yy_synth_8, 256, fs);
+title(<span class="string">"Synthesized Signal (28 Freqs)"</span>);
+</pre><pre class="codeoutput">Warning: Data clipped when writing file. 
+</pre><img vspace="5" hspace="5" src="synthesizing_speech_project_02.png" alt=""> <h2 id="4">Reducing Frame Duration to Reduce Number of Needed Sinusoids</h2><pre class="codeinput">[xx, fs] = audioread(<span class="string">'FurElise.wav'</span>);
+soundsc(xx, fs);
+pause(length(xx)/fs);
+
+
+<span class="comment">% Same params as for speech</span>
+frameDur = 0.01;
+overlap = 0.005;
+<span class="comment">% frameDur = 0.0005;</span>
+<span class="comment">% overlap = 0.00025;</span>
+numSines = 8;
+
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+
+soundsc(yy_synth_8, fs);
+pause(length(yy_synth_8)/fs);
+
+<span class="comment">% I played with reducing the frame duration and found that it really didn't</span>
+<span class="comment">% improve the quality of the sound for a given number of sinusoids. Our</span>
+<span class="comment">% parameters worked pretty well. Making the frame duration longer did</span>
+<span class="comment">% decrease quality.</span>
+</pre><h2 id="5">Listening to the Mystery Signal</h2><p>Load data</p><pre class="codeinput">load(<span class="string">'sigMystery.mat'</span>); <span class="comment">% amplitudes and freqs for each frame</span>
+fs = 8000;             <span class="comment">% In hz</span>
+frameDur = 0.008;      <span class="comment">% 8 ms</span>
+overlap = 0.004;
+
+<span class="comment">% Synthesize and play</span>
+yy_mystery = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+
+disp(<span class="string">'Playing the synthesized mystery signal...'</span>);
+soundsc(yy_mystery, fs);
+
+<span class="comment">% The mystery message is "That hose can wash her feet".</span>
+
+<span class="comment">% View spectrogram</span>
+figure;
+specgram(yy_mystery, 256, fs);
+title(<span class="string">'Spectrogram of Synthesized Mystery Signal'</span>);
+xlabel(<span class="string">'Time (s)'</span>);
+ylabel(<span class="string">'Frequency (Hz)'</span>);
+</pre><h2 id="6">Helper Functions</h2><p>Function to synthesisze signal from complex amplitudes and frequencies Camps: complex amplitudes (num frames * num sines) Freqs: frequencies (num frames * num sines) fs: sampling rate in Hz frameDur: duration of each frame in seconds overlap: duration of overlap in seconds yy: output signal</p><pre class="codeinput"><span class="keyword">function</span> yy = sigSynth(Camps, Freqs, fs, frameDur, overlap)
+L = round(frameDur * fs); <span class="comment">% Samples per frame</span>
+step = round((frameDur - overlap) * fs); <span class="comment">% Step size between frames</span>
+numFrames = size(Camps, 1);
+numSines = size(Camps, 2);
+
+length = step * (numFrames - 1) + L;
+yy = zeros(1, length);
+
+<span class="keyword">for</span> k = 1:numFrames
+    t = (0:L-1) / fs; <span class="comment">% Single frame</span>
+    frameSignal = zeros(1,L);
+    <span class="keyword">for</span> n = 1:numSines
+        frameSignal = frameSignal + real(Camps(k,n) * exp(1j*2*pi*Freqs(k,n)*t));
+    <span class="keyword">end</span>
+    <span class="comment">% Add frame signal to output with overlap</span>
+    n1 = (k-1) * step + 1;
+    n2 = n1 + L -1;
+    yy(n1:n2) = yy(n1:n2) + frameSignal;
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+
+<span class="comment">% This function was supposed to come from the executable sigAnalyze.p, but was in an</span>
+<span class="comment">% outdated format that MattLab couldn't run. I put the function contract</span>
+<span class="comment">% into ChatGPT since it was beyond the project scope and this was the result</span>
+<span class="comment">% that I used throughout the lab.</span>
+<span class="keyword">function</span> [Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap)
+    <span class="comment">% sigAnalyze: Analyze signal into sinusoidal components</span>
+    <span class="comment">%</span>
+    <span class="comment">% xx       : Input signal vector</span>
+    <span class="comment">% fs       : Sampling rate (samples/sec)</span>
+    <span class="comment">% numSines : Number of sinusoids to find per frame</span>
+    <span class="comment">% frameDur : Duration of each frame (sec)</span>
+    <span class="comment">% overlap  : Frame overlap (sec)</span>
+    <span class="comment">%</span>
+    <span class="comment">% Camps    : Complex amplitudes (numFrames x numSines)</span>
+    <span class="comment">% Freqs    : Frequencies (numFrames x numSines)</span>
+
+    <span class="comment">% Calculate frame size and step size in samples</span>
+    L = round(frameDur * fs);          <span class="comment">% Frame length in samples</span>
+    step = round((frameDur - overlap) * fs); <span class="comment">% Step size in samples</span>
+    numFrames = floor((length(xx) - L) / step) + 1; <span class="comment">% Total number of frames</span>
+
+    <span class="comment">% Initialize output arrays</span>
+    Camps = zeros(numFrames, numSines);
+    Freqs = zeros(numFrames, numSines);
+
+    <span class="comment">% Hann window for each frame</span>
+    window = hann(L, <span class="string">'periodic'</span>);
+
+    <span class="comment">% Loop over each frame</span>
+    <span class="keyword">for</span> k = 1:numFrames
+        <span class="comment">% Extract the k-th frame</span>
+        n1 = (k - 1) * step + 1;       <span class="comment">% Start index</span>
+        n2 = n1 + L - 1;               <span class="comment">% End index</span>
+        frame = xx(n1:n2) .* window;   <span class="comment">% Windowed frame</span>
+
+        <span class="comment">% Compute FFT of the frame</span>
+        fftLength = 2^nextpow2(L);     <span class="comment">% Zero-padding for better frequency resolution</span>
+        X = fft(frame, fftLength);    <span class="comment">% FFT of the frame</span>
+        freqAxis = (0:fftLength-1) * fs / fftLength; <span class="comment">% Frequency axis</span>
+
+        <span class="comment">% Consider only the positive frequencies</span>
+        X = X(1:fftLength/2);
+        freqAxis = freqAxis(1:fftLength/2);
+
+        <span class="comment">% Find top numSines components based on magnitude</span>
+        [~, idx] = maxk(abs(X), numSines); <span class="comment">% Find indices of top magnitudes</span>
+        Camps(k, :) = X(idx);              <span class="comment">% Complex amplitudes</span>
+        Freqs(k, :) = freqAxis(idx);       <span class="comment">% Corresponding frequencies</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Warning: Data clipped when writing file. 
+Warning: Data clipped when writing file. 
+</pre><h2 id="7">Code for Recording an Audio Snippet</h2><p>fs = 8000; recorder = audiorecorder(fs, 16, 1); disp('Recording starts in 3 seconds...'); pause(3); disp('Start speaking...'); recordblocking(recorder, 2);  % Record for 2 seconds disp('Recording complete.'); xx = getaudiodata(recorder, 'double');  % Get audio as double audiowrite('myVoice.wav', xx, fs);</p><p>soundsc(xx, fs); % Play what was recorded</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% SYNTHESIZING SPEECH (PROJECT SECTION 2)
+% Emily Erickson
+%% Load in Audio (see bottom for code to record own)
+fs = 8000;
+[xx, fs] = audioread('voice.wav');
+
+%% Comparing Voice Signal Synthesized With Different Numbers of Sinusoids
+% 8 sinusoids
+frameDur = 0.01;
+overlap = 0.005;
+numSines = 8;
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+soundsc(yy_synth_8, fs);
+audiowrite("pipe8.wav", yy_synth_8,fs)
+pause(length(yy_synth_8)/fs); % Pause for the duration of the first signal
+
+% Comparing the spectograms of the original signal with one synthesized with 8 sinusoids
+subplot(2, 1, 1);
+specgram(xx, 256, fs);
+title('Original Signal');
+subplot(2,1,2);
+specgram(yy_synth_8, 256, fs);
+title("Synthesized Signal (8 Freqs)");
+
+% They have similar harmonic content in vowel regions, but audible differentices 
+% with fricatives.
+
+% Lets repeat to see what is sounds like with only the 4 largest frequencies per
+% frame
+[~, idx] = sort(abs(Camps),2, 'descend'); % Sort by mgnitude
+top4Idx = idx(:, 1:4);
+Camps_4 = zeros(size(Camps, 1), 4);
+Freqs_4 = zeros(size(Freqs, 1), 4);
+for k = 1:size(Camps, 1)
+    Camps_4(k, :) = Camps(k, top4Idx(k, :));
+    Freqs_4(k, :) = Freqs(k, top4Idx(k, :));
+end
+
+yy_synth_4 = sigSynth(Camps_4, Freqs_4, fs, frameDur, overlap);
+soundsc(yy_synth_4, fs);
+audiowrite("pipe4.wav", yy_synth_4,fs)
+pause(length(yy_synth_4)/fs);
+% The audio quality is definitely worse than the original and 8 sinusoid
+% versions. Sounds like the speake is underwater!
+
+% Visualizing 8 vs 4 sinusoid synthesis
+subplot(2,1,1);
+specgram(yy_synth_8, 256, fs);
+title('Synthesized Signal (8 Freqs)');
+subplot(2,1,2);
+specgram(yy_synth_4, 256, fs);
+title('Synthesized Signal (4 Freqs)');
+
+%% How Does Synthesizing With Less Sinusoids Affect Music?
+[xx, fs] = audioread('FurElise.wav');
+soundsc(xx, fs);
+pause(length(xx)/fs);
+
+% Same params as for speech
+frameDur = 0.01;
+overlap = 0.005;
+numSines = 28;
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+
+% I just varied the number of sinusoids like above. The fewer I used, the
+% worse it sounded. I found at least 28 to be necessary for the song to
+% sound decent.
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+soundsc(yy_synth_8, fs); 
+pause(length(yy_synth_8)/fs);
+audiowrite("elise28.wav", yy_synth_8,fs)
+
+% Here is a spectogram comparing the two:
+subplot(2, 1, 1);
+specgram(xx, 256, fs);
+title('Original Signal');
+subplot(2,1,2);
+specgram(yy_synth_8, 256, fs);
+title("Synthesized Signal (28 Freqs)");
+
+%% Reducing Frame Duration to Reduce Number of Needed Sinusoids
+
+[xx, fs] = audioread('FurElise.wav');
+soundsc(xx, fs);
+pause(length(xx)/fs);
+
+
+% Same params as for speech
+frameDur = 0.01;
+overlap = 0.005;
+% frameDur = 0.0005;
+% overlap = 0.00025;
+numSines = 8;
+
+[Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap);
+yy_synth_8 = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+
+soundsc(yy_synth_8, fs); 
+pause(length(yy_synth_8)/fs);
+
+% I played with reducing the frame duration and found that it really didn't
+% improve the quality of the sound for a given number of sinusoids. Our
+% parameters worked pretty well. Making the frame duration longer did
+% decrease quality.
+
+%% Listening to the Mystery Signal
+% Load data
+load('sigMystery.mat'); % amplitudes and freqs for each frame
+fs = 8000;             % In hz
+frameDur = 0.008;      % 8 ms
+overlap = 0.004;       
+
+% Synthesize and play
+yy_mystery = sigSynth(Camps, Freqs, fs, frameDur, overlap);
+
+disp('Playing the synthesized mystery signal...');
+soundsc(yy_mystery, fs);
+
+% The mystery message is "That hose can wash her feet".
+
+% View spectrogram
+figure;
+specgram(yy_mystery, 256, fs);
+title('Spectrogram of Synthesized Mystery Signal');
+xlabel('Time (s)');
+ylabel('Frequency (Hz)');
+
+%% Helper Functions
+% Function to synthesisze signal from complex amplitudes and frequencies
+% Camps: complex amplitudes (num frames * num sines)
+% Freqs: frequencies (num frames * num sines)
+% fs: sampling rate in Hz
+% frameDur: duration of each frame in seconds
+% overlap: duration of overlap in seconds
+% yy: output signal
+function yy = sigSynth(Camps, Freqs, fs, frameDur, overlap)
+L = round(frameDur * fs); % Samples per frame
+step = round((frameDur - overlap) * fs); % Step size between frames
+numFrames = size(Camps, 1);
+numSines = size(Camps, 2);
+
+length = step * (numFrames - 1) + L;
+yy = zeros(1, length);
+
+for k = 1:numFrames
+    t = (0:L-1) / fs; % Single frame
+    frameSignal = zeros(1,L);
+    for n = 1:numSines
+        frameSignal = frameSignal + real(Camps(k,n) * exp(1j*2*pi*Freqs(k,n)*t));
+    end
+    % Add frame signal to output with overlap
+    n1 = (k-1) * step + 1;
+    n2 = n1 + L -1;
+    yy(n1:n2) = yy(n1:n2) + frameSignal;
+end
+end
+
+
+
+% This function was supposed to come from the executable sigAnalyze.p, but was in an
+% outdated format that MattLab couldn't run. I put the function contract
+% into ChatGPT since it was beyond the project scope and this was the result 
+% that I used throughout the lab.
+function [Camps, Freqs] = sigAnalyze(xx, fs, numSines, frameDur, overlap)
+    % sigAnalyze: Analyze signal into sinusoidal components
+    %
+    % xx       : Input signal vector
+    % fs       : Sampling rate (samples/sec)
+    % numSines : Number of sinusoids to find per frame
+    % frameDur : Duration of each frame (sec)
+    % overlap  : Frame overlap (sec)
+    %
+    % Camps    : Complex amplitudes (numFrames x numSines)
+    % Freqs    : Frequencies (numFrames x numSines)
+
+    % Calculate frame size and step size in samples
+    L = round(frameDur * fs);          % Frame length in samples
+    step = round((frameDur - overlap) * fs); % Step size in samples
+    numFrames = floor((length(xx) - L) / step) + 1; % Total number of frames
+
+    % Initialize output arrays
+    Camps = zeros(numFrames, numSines);
+    Freqs = zeros(numFrames, numSines);
+
+    % Hann window for each frame
+    window = hann(L, 'periodic'); 
+
+    % Loop over each frame
+    for k = 1:numFrames
+        % Extract the k-th frame
+        n1 = (k - 1) * step + 1;       % Start index
+        n2 = n1 + L - 1;               % End index
+        frame = xx(n1:n2) .* window;   % Windowed frame
+
+        % Compute FFT of the frame
+        fftLength = 2^nextpow2(L);     % Zero-padding for better frequency resolution
+        X = fft(frame, fftLength);    % FFT of the frame
+        freqAxis = (0:fftLength-1) * fs / fftLength; % Frequency axis
+
+        % Consider only the positive frequencies
+        X = X(1:fftLength/2);
+        freqAxis = freqAxis(1:fftLength/2);
+
+        % Find top numSines components based on magnitude
+        [~, idx] = maxk(abs(X), numSines); % Find indices of top magnitudes
+        Camps(k, :) = X(idx);              % Complex amplitudes
+        Freqs(k, :) = freqAxis(idx);       % Corresponding frequencies
+    end
+end
+
+%% Code for Recording an Audio Snippet
+% fs = 8000;
+% recorder = audiorecorder(fs, 16, 1);
+% disp('Recording starts in 3 seconds...');
+% pause(3);
+% disp('Start speaking...');
+% recordblocking(recorder, 2);  % Record for 2 seconds
+% disp('Recording complete.');
+% xx = getaudiodata(recorder, 'double');  % Get audio as double
+% audiowrite('myVoice.wav', xx, fs);
+% 
+% soundsc(xx, fs); % Play what was recorded
+
+##### SOURCE END #####
+--></body></html>
